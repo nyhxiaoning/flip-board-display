@@ -18,7 +18,7 @@ const state = {
   charHeight: 62, // 单个字符格高度。
   fontScale: 0.85, // 字符在格子中的占比（0.6~1.0）。
   midlineGap: 2, // 中间黑线间隔（像素）。
-  tileGap: 0, // 字符格之间的水平间距。
+  tileGap: 2, // 字符格之间的水平间距。
   tileRadius: 0, // 上下翻页卡片的圆角半径。
   rowGap: 16, // 行与行之间的垂直间距。
   columnGap: 22, // 信息列之间的水平间距。
@@ -192,11 +192,11 @@ function buildRollSequence(fromChar, toChar) {
 
 function getRollStepDuration(stepCount) {
   if (stepCount <= 1) {
-    return Math.max(110, Math.round(state.flipDuration * 0.95));
+    return Math.max(90, Math.round(state.flipDuration * 0.78));
   }
 
-  // 连续字符切换时仍保持可感知的翻页节奏，避免“秒切”。
-  return clamp(Math.round(state.flipDuration / Math.min(stepCount * 0.8 + 0.8, 5)), 90, Math.max(180, state.flipDuration));
+  // 连续字符切换时加速单步时长，避免多张连续翻动拖沓。
+  return clamp(Math.round(state.flipDuration / Math.min(stepCount * 0.95 + 1.2, 8)), 55, Math.max(120, Math.round(state.flipDuration * 0.9)));
 }
 
 function getReplayStartChar(targetChar) {

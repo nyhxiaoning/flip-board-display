@@ -32,7 +32,7 @@ const state = {
   boardPadding: 28, // 看板内容区域内边距。
   labelHeight: 26, // 列标题区域高度。
   titleHeight: 34, // 看板标题区域高度。
-  flipDuration: 260, // 基础翻页时长（毫秒）。
+  flipDuration: 500, // 基础翻页时长（毫秒）。
   wsEnabled: false, // 是否启用 WebSocket 实时数据。
   wsSource: "okx", // WebSocket 数据源。
   wsSymbols: "BTC-USDT,ETH-USDT,SOL-USDT,BNB-USDT,ADA-USDT,XRP-USDT,DOGE-USDT,TRX-USDT,LTC-USDT,LINK-USDT", // 订阅交易对列表。
@@ -162,8 +162,8 @@ function isTimeColonSlot(column, charIndex) {
 function buildRollSequence(fromChar, toChar) {
   const from = sanitizeChar(fromChar);
   const to = sanitizeChar(toChar);
-  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const DIGITS = "0123456789";
+  const LETTERS = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const DIGITS = " 0123456789";
   const SYMBOLS = " .:/-*#";
 
   // ":" 直接切换，不进行逐步滚动。
@@ -1291,17 +1291,13 @@ class FlipBoardRenderer {
     const secondHalf = clamp((easedProgress - 0.5) * 2, 0, 1);
 
     if (easedProgress < 0.5) {
-      this.drawStaticChar(x, y, width, height, fromChar, topRect, bottomRect, radius);
-      this.drawTopFlap(x, y, width, height, fromChar, 1 - firstHalf, topRect, radius);
-      this.ctx.fillStyle = `rgba(0, 0, 0, ${0.14 + firstHalf * 0.26})`;
-      this.drawRoundedRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height, radius);
-      this.ctx.fill();
+      this.drawHalfChar(x, y, width, height, toChar, "top", 1, topRect, radius);
+      this.drawHalfChar(x, y, width, height, fromChar, "bottom", 1, bottomRect, radius);
+      this.drawTopFlap(x, y, width, height, fromChar, 1 - firstHalf, topRect, radius, backgroundTop);
     } else if (easedProgress < 1) {
-      this.drawStaticChar(x, y, width, height, toChar, topRect, bottomRect, radius);
-      this.drawBottomFlap(x, y, width, height, toChar, secondHalf, bottomRect, radius);
-      this.ctx.fillStyle = `rgba(0, 0, 0, ${0.1 + (1 - secondHalf) * 0.24})`;
-      this.drawRoundedRect(topRect.x, topRect.y, topRect.width, topRect.height, radius);
-      this.ctx.fill();
+      this.drawHalfChar(x, y, width, height, toChar, "top", 1, topRect, radius);
+      this.drawHalfChar(x, y, width, height, fromChar, "bottom", 1, bottomRect, radius);
+      this.drawBottomFlap(x, y, width, height, toChar, secondHalf, bottomRect, radius, backgroundBottom);
     } else {
       this.drawStaticChar(x, y, width, height, toChar, topRect, bottomRect, radius);
     }
@@ -1327,7 +1323,7 @@ class FlipBoardRenderer {
     this.drawHalfChar(x, y, width, height, char, "bottom", 1, bottomRect, radius);
   }
 
-  drawTopFlap(x, y, width, height, char, scaleY, topRect, radius) {
+  drawTopFlap(x, y, width, height, char, scaleY, topRect, radius, backgroundFill) {
     this.ctx.save();
     this.drawRoundedRect(topRect.x, topRect.y, topRect.width, topRect.height, radius);
     this.ctx.clip();
@@ -1336,14 +1332,14 @@ class FlipBoardRenderer {
     this.ctx.translate(x + width / 2, hingeY);
     this.ctx.scale(1 - fold * 0.12, Math.max(scaleY, 0.02));
     this.ctx.translate(-(x + width / 2), -hingeY);
-    this.drawHalfChar(x, y, width, height, char, "top", 1, topRect, radius);
-    this.ctx.fillStyle = `rgba(0, 0, 0, ${0.24 + fold * 0.62})`;
+    this.ctx.fillStyle = backgroundFill;
     this.drawRoundedRect(topRect.x, topRect.y, topRect.width, topRect.height, radius);
     this.ctx.fill();
+    this.drawHalfChar(x, y, width, height, char, "top", 1, topRect, radius);
     this.ctx.restore();
   }
 
-  drawBottomFlap(x, y, width, height, char, scaleY, bottomRect, radius) {
+  drawBottomFlap(x, y, width, height, char, scaleY, bottomRect, radius, backgroundFill) {
     this.ctx.save();
     this.drawRoundedRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height, radius);
     this.ctx.clip();
@@ -1352,13 +1348,10 @@ class FlipBoardRenderer {
     this.ctx.translate(x + width / 2, hingeY);
     this.ctx.scale(1 - fold * 0.12, Math.max(scaleY, 0.02));
     this.ctx.translate(-(x + width / 2), -hingeY);
+    this.ctx.fillStyle = backgroundFill;
+    this.drawRoundedRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height, radius);
+    this.ctx.fill();
     this.drawHalfChar(x, y, width, height, char, "bottom", 1, bottomRect, radius);
-    this.ctx.fillStyle = `rgba(255, 255, 255, ${0.2 * fold})`;
-    this.drawRoundedRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height, radius);
-    this.ctx.fill();
-    this.ctx.fillStyle = `rgba(0, 0, 0, ${0.14 + fold * 0.36})`;
-    this.drawRoundedRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height, radius);
-    this.ctx.fill();
     this.ctx.restore();
   }
 

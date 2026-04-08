@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>翻页时钟</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    font-family: Arial, sans-serif;
+  }
+
+  .clock {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .flip {
+    width: 100px;
+    height: 120px;
+    position: relative;
+    font-size: 80px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .flip .piece {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .flip .top {
+    top: 0;
+    border-bottom: 1px solid #000;
+    align-items: flex-end;
+    padding-bottom: 4px;
+    transform-origin: bottom center;
+  }
+
+  .flip .bottom {
+    bottom: 0;
+    align-items: flex-start;
+    padding-top: 4px;
+    transform-origin: top center;
+  }
+
+  .flip .fold-top {
+    z-index: 2;
+    animation: foldTop 0.6s linear forwards;
+  }
+
+  .flip .fold-bottom {
+    z-index: 3;
+    animation: foldBottom 0.6s linear forwards;
+  }
+
+  @keyframes foldTop {
+    0% { transform: rotateX(0deg); }
+    100% { transform: rotateX(-90deg); }
+  }
+
+  @keyframes foldBottom {
+    0% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0deg); }
+  }
+
+  .colon {
+    font-size: 80px;
+    color: #fff;
+  }
+</style>
+</head>
+
+<body>
+  <div class="clock">
+    <div class="flip" id="h1"></div>
+    <div class="flip" id="h2"></div>
+    <span class="colon">:</span>
+    <div class="flip" id="m1"></div>
+    <div class="flip" id="m2"></div>
+    <span class="colon">:</span>
+    <div class="flip" id="s1"></div>
+    <div class="flip" id="s2"></div>
+  </div>
+
+  <script>
+    // 记录上一秒数字
+    const lastNum = {};
+
+    function pad(n) {
+      return n.toString().padStart(2, '0');
+    }
+
+    function createFlip(dom, num) {
+      dom.innerHTML = `
+        <div class="piece top">${num}</div>
+        <div class="piece bottom">${num}</div>
+      `;
+    }
+
+    function updateFlip(dom, num) {
+      const top = dom.querySelector('.top');
+      const bottom = dom.querySelector('.bottom');
+
+      // 新建折叠层
+      const foldTop = document.createElement('div');
+      foldTop.className = 'piece top fold-top';
+      foldTop.textContent = num;
+      dom.appendChild(foldTop);
+
+      const foldBottom = document.createElement('div');
+      foldBottom.className = 'piece bottom fold-bottom';
+      foldBottom.textContent = num;
+      dom.appendChild(foldBottom);
+
+      // 动画结束后替换
+      setTimeout(() => {
+        top.textContent = num;
+        bottom.textContent = num;
+        foldTop.remove();
+        foldBottom.remove();
+      }, 600);
+    }
+
+    function tick() {
+      const now = new Date();
+      const h = pad(now.getHours());
+      const m = pad(now.getMinutes());
+      const s = pad(now.getSeconds());
+
+      const map = {
+        h1: h[0], h2: h[1],
+        m1: m[0], m2: m[1],
+        s1: s[0], s2: s[1]
+      };
+
+      for (const key in map) {
+        const num = map[key];
+        const el = document.getElementById(key);
+
+        if (!lastNum[key]) {
+          createFlip(el, num);
+          lastNum[key] = num;
+        } else if (lastNum[key] !== num) {
+          updateFlip(el, num);
+          lastNum[key] = num;
+        }
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>

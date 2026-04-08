@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flip Clock</title>
+  <style>
+    body {
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: monospace;
+    }
+
+    .clock {
+      display: flex;
+      gap: 16px;
+    }
+
+    .group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .flip {
+      perspective: 1000px;
+    }
+
+    .card {
+      position: relative;
+      width: 60px;
+      height: 80px;
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .top,
+    .bottom {
+      position: absolute;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .top {
+      top: 0;
+      border-bottom: 1px solid #000;
+    }
+
+    .bottom {
+      bottom: 0;
+      align-items: flex-start;
+    }
+
+    .flip-card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    .flip-top,
+    .flip-bottom {
+      position: absolute;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+    }
+
+    .flip-top {
+      top: 0;
+      transform-origin: bottom;
+    }
+
+    .flip-bottom {
+      bottom: 0;
+      align-items: flex-start;
+      transform-origin: top;
+    }
+
+    .play .flip-top {
+      animation: flipTop 0.6s ease-in forwards;
+    }
+
+    .play .flip-bottom {
+      animation: flipBottom 0.6s ease-out forwards;
+    }
+
+    @keyframes flipTop {
+      0% { transform: rotateX(0deg); }
+      100% { transform: rotateX(-90deg); }
+    }
+
+    @keyframes flipBottom {
+      0% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="clock" id="clock"></div>
+
+<script>
+  function createDigit(initial) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "flip";
+
+    wrapper.innerHTML = `
+      <div class="card">
+        <div class="top">${initial}</div>
+        <div class="bottom">${initial}</div>
+        <div class="flip-card">
+          <div class="flip-top">${initial}</div>
+          <div class="flip-bottom">${initial}</div>
+        </div>
+      </div>
+    `;
+
+    return wrapper;
+  }
+
+  function updateDigit(el, newVal) {
+    const top = el.querySelector(".top");
+    const bottom = el.querySelector(".bottom");
+    const flipTop = el.querySelector(".flip-top");
+    const flipBottom = el.querySelector(".flip-bottom");
+    const flipCard = el.querySelector(".flip-card");
+
+    const current = top.innerText;
+    if (current === newVal) return;
+
+    flipTop.innerText = current;
+    flipBottom.innerText = newVal;
+
+    flipCard.classList.remove("play");
+    void flipCard.offsetWidth; // 触发重绘
+    flipCard.classList.add("play");
+
+    setTimeout(() => {
+      top.innerText = newVal;
+      bottom.innerText = newVal;
+    }, 600);
+  }
+
+  function getTime() {
+    const now = new Date();
+    return [
+      String(now.getHours()).padStart(2, "0"),
+      String(now.getMinutes()).padStart(2, "0"),
+      String(now.getSeconds()).padStart(2, "0"),
+    ];
+  }
+
+  const clock = document.getElementById("clock");
+  const digits = [];
+
+  function init() {
+    const time = getTime();
+
+    time.forEach(part => {
+      const group = document.createElement("div");
+      group.className = "group";
+
+      part.split("").forEach(num => {
+        const digit = createDigit(num);
+        group.appendChild(digit);
+        digits.push(digit);
+      });
+
+      clock.appendChild(group);
+    });
+  }
+
+  function tick() {
+    const time = getTime().join("").split("");
+
+    digits.forEach((digit, i) => {
+      updateDigit(digit, time[i]);
+    });
+  }
+
+  init();
+  setInterval(tick, 1000);
+</script>
+
+</body>
+</html>
